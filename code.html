@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Linux</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        body {
+            background: linear-gradient(45deg, #1f1f1f, #121212);
+            background-size: 400% 400%;
+            animation: gradientBackground 15s ease infinite;
+            color: #00ff22;
+            font-family: 'Roboto', sans-serif;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+            display:flex;
+            flex-wrap: wrap;
+        }
+
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1, h2 {
+            opacity: 0;
+            animation: fadeInDown 2s forwards;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .controls, .box {
+            opacity: 0;
+            animation: fadeInUp 2s forwards;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .controls {
+            display: flex;
+            padding: 10px;
+            background-color: rgba(31, 31, 31, 0.95);
+            color: #ffffff;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color:#00ff22 ;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 128, 0, 0.2);
+        }
+
+        .button:hover {
+            background-color: rgba(0, 128, 0, 0.7);
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 128, 0, 0.4);
+        }
+
+        .button.dark-mode {
+            background-color: #333;
+        }
+
+        body.dark-mode .button.dark-mode {
+            background-color: #444;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: white;
+        }
+
+        #editor-container {
+            display: flex;
+            height: calc(100% - 60px);
+            position: relative;
+        }
+
+        #editor {
+            flex: 1;
+            border-right: 1px solid #00ff22;
+            overflow: hidden;
+        }
+
+        #preview {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #1e1e1e;
+            border: none;
+            color: #e0e0e0;
+            overflow: auto;
+        }
+
+        .splitter {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background-color: #00ff15;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        a {
+            color: #00ff15;
+            text-decoration: none;
+            font-size: 20px;
+            transition: color 0.3s ease, background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #09ff00;
+            color: black;
+            box-shadow: 0 0 10px #15ff00;
+            border-radius: 5px;
+        }
+
+        h1 {
+            color: green;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h2 {
+            position: absolute;
+            top: 1px;
+            right: 35rem;
+            color: #33ff00;
+            font-size: 25px;
+        }
+
+        .box {
+            background-color: transparent;
+            color: green;
+            height: 30px;
+            width: 370px;
+            position: absolute;
+            top: 20px;
+            right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multiple Linux</h1>
+    <h2><center>Coding <button style="background-color: green; border: 1px solid green; font-size: 20px;">Area</button></center></h2>
+    <div class="box">
+        <a href="main page.html">Home</a> |
+        <a href="code.html">Code</a> |
+        <a href="note.html">Notes</a> |
+        <a href="extrack.html">Extract</a> |
+        <a href="frontpage.html">Back</a>
+    </div>
+    <div class="controls">
+        <input type="file" id="htmlFile" accept=".html" style="font-size: 17px; "/>
+        <input type="file" id="cssFile" accept=".css" style=" font-size: 17px;"/>
+        <button id="themeToggle" class="button" >Toggle Theme</button>
+        <button id="displayButton" class="button">Display Code</button>
+    </div>
+    <div id="editor-container">
+        <div id="editor"></div>
+        <div class="splitter"></div>
+        <iframe id="preview"></iframe>
+    </div>
+    <script src="https://unpkg.com/monaco-editor/min/vs/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let darkMode = localStorage.getItem('darkMode') === 'true';
+
+            // Initialize Monaco Editor
+            require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor/min/vs' }});
+            require(['vs/editor/editor.main'], function () {
+                const editor = monaco.editor.create(document.getElementById('editor'), {
+                    value: "<!-- Load your HTML here -->\n<style>\n/* Load your CSS here */\n</style>",
+                    language: 'html',
+                    theme: darkMode ? 'vs-dark' : 'vs-light'
+                });
+
+                const themeToggle = document.getElementById('themeToggle');
+                const body = document.body;
+                themeToggle.addEventListener('click', () => {
+                    darkMode = !darkMode;
+                    localStorage.setItem('darkMode', darkMode);
+                    body.classList.toggle('dark-mode', darkMode);
+                    editor.updateOptions({ theme: darkMode ? 'vs-dark' : 'vs-light' });
+                    themeToggle.classList.toggle('dark-mode', darkMode);
+                    themeToggle.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+                });
+
+                const htmlFileInput = document.getElementById('htmlFile');
+                const cssFileInput = document.getElementById('cssFile');
+                htmlFileInput.addEventListener('change', handleFileUpload);
+                cssFileInput.addEventListener('change', handleFileUpload);
+
+                function handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const content = e.target.result;
+                            if (file.type === 'text/html') {
+                                const cssContent = editor.getValue().match(/<style>([^]*)<\/style>/);
+                                editor.setValue(content + (cssContent ? cssContent[0] : ''));
+                            } else if (file.type === 'text/css') {
+                                const htmlContent = editor.getValue().match(/<[^]*>/);
+                                const cssContent = `<style>${content}</style>`;
+                                editor.setValue((htmlContent ? htmlContent[0] : '') + cssContent);
+                            }
+                            updatePreview();
+                        };
+                        reader.readAsText(file);
+                    }
+                }
+
+                function updatePreview() {
+                    const code = editor.getValue();
+                    const previewFrame = document.getElementById('preview');
+                    const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+                    previewDoc.open();
+                    previewDoc.write(code);
+                    previewDoc.close();
+                }
+
+                editor.onDidChangeModelContent(() => {
+                    updatePreview();
+                });
+
+                const displayButton = document.getElementById('displayButton');
+                displayButton.addEventListener('click', () => {
+                    const code = editor.getValue();
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.open();
+                    newWindow.document.write(code);
+                    newWindow.document.close();
+                });
+
+                const splitter = document.querySelector('.splitter');
+                let isResizing = false;
+                let lastDownX = 0;
+
+                splitter.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    lastDownX = e.clientX;
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+                    const offsetRight = document.body.offsetWidth - (e.clientX - lastDownX);
+                    document.getElementById('editor').style.width = `calc(50% + ${e.clientX - lastDownX}px)`;
+                    document.getElementById('preview').style.width = `calc(50% - ${e.clientX - lastDownX}px)`;
+                });
+
+                window.addEventListener('mouseup', () => {
+                    isResizing = false;
+                });
+
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
